@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>数当てゲーム</title>
+
+<style>
+body {
+  margin: 0;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: "Segoe UI", sans-serif;
+  background: linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+  color: white;
+}
+
+.game {
+  background: rgba(0,0,0,0.6);
+  padding: 30px;
+  border-radius: 20px;
+  box-shadow: 0 0 30px rgba(0,255,255,0.4);
+  text-align: center;
+  width: 340px;
+  backdrop-filter: blur(10px);
+}
+
+h1 {
+  margin-top: 0;
+  color: #00ffff;
+  text-shadow: 0 0 10px #00ffff;
+}
+
+button {
+  margin: 6px;
+  padding: 10px 14px;
+  font-size: 16px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: 0.2s;
+  font-weight: bold;
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0,255,255,0.6);
+}
+
+/* 難易度ボタン */
+.easy { background:#2ecc71; }
+.normal { background:#f1c40f; color:black; }
+.hard { background:#e74c3c; }
+
+/* 調整ボタン */
+.adjust { background:#34495e; color:white; }
+
+/* 予想ボタン */
+.guessBtn { background:#3498db; }
+
+/* リトライ */
+.retry { background:#9b59b6; }
+
+input {
+  margin-top: 12px;
+  padding: 8px;
+  font-size: 18px;
+  width: 120px;
+  border-radius: 8px;
+  border: none;
+  text-align: center;
+}
+
+#result {
+  font-size: 20px;
+  margin-top: 10px;
+  font-weight: bold;
+}
+</style>
+</head>
+
+<body>
+
+<div class="game">
+
+<h1>数当てゲーム</h1>
+
+<p>難易度を選択</p>
+
+<button class="easy" onclick="startGame('easy')">Easy</button>
+<button class="normal" onclick="startGame('normal')">Normal</button>
+<button class="hard" onclick="startGame('hard')">Hard</button>
+
+<p id="info"></p>
+<p>残り回数：<span id="count">0</span></p>
+<p>スコア：<span id="score">-</span></p>
+<p>履歴：<span id="history">なし</span></p>
+
+<input type="number" id="guess" disabled>
+
+<br>
+
+<button class="adjust" onclick="changeGuess(-10)">-10</button>
+<button class="adjust" onclick="changeGuess(-1)">-1</button>
+<button class="adjust" onclick="changeGuess(1)">+1</button>
+<button class="adjust" onclick="changeGuess(10)">+10</button>
+
+<br>
+
+<button class="guessBtn" onclick="check()" disabled id="guessBtn">
+予想する
+</button>
+
+<p id="result"></p>
+
+<button class="retry" onclick="resetGame()" id="retryBtn" style="display:none;">
+🔄 もう一度
+</button>
+
+</div>
+
+<script>
+let answer;
+let remaining;
+let history = [];
+let turns = 0;
+let maxNumber = 100;
+
+function startGame(level) {
+  history = [];
+  turns = 0;
+  document.getElementById("score").textContent = "-";
+
+  if (level === 'easy') {
+    maxNumber = 50;
+    answer = Math.floor(Math.random() * maxNumber) + 1;
+    remaining = 10;
+    info.textContent = "1〜50の数字";
+  }
+
+  if (level === 'normal') {
+    maxNumber = 100;
+    answer = Math.floor(Math.random() * maxNumber) + 1;
+    remaining = 10;
+    info.textContent = "1〜100の数字";
+  }
+
+  if (level === 'hard') {
+    maxNumber = 1000;
+    answer = Math.floor(Math.random() * maxNumber) + 1;
+    remaining = 10;
+    info.textContent = "1〜1000の数字";
+  }
+
+  count.textContent = remaining;
+  history.textContent = "なし";
+  guess.disabled = false;
+  guessBtn.disabled = false;
+  result.textContent = "";
+  retryBtn.style.display = "none";
+  guess.value = "";
+}
+
+function changeGuess(amount) {
+  if (guess.disabled) return;
+
+  let value = Number(guess.value) || 0;
+  value += amount;
+
+  if (value < 1) value = 1;
+  if (value > maxNumber) value = maxNumber;
+
+  guess.value = value;
+}
+
+function check() {
+  if (remaining <= 0) return;
+
+  const g = Number(guess.value);
+  if (!g) {
+    result.textContent = "⚠️ 数字を入力";
+    return;
+  }
+
+  turns++;
+
+  if (history.includes(g)) {
+  result.textContent = "⚠️ すでに入力済み（回数は減ります）";
+  }
+
+  history.push(g);
+  document.getElementById("history").textContent = history.join(", ");
+
+  remaining--;
+  count.textContent = remaining;
+
+  if (g === answer) {
+    const score = Math.max(100 - (turns - 1) * 10, 10);
+    scoreSpan = document.getElementById("score");
+    scoreSpan.textContent = score;
+    result.textContent = "🎉 正解！";
+    endGame();
+  } else if (remaining === 0) {
+    result.textContent = " GAME OVER 答え：" + answer;
+    endGame();
+  } else if (g < answer) {
+    result.textContent = "📈 もっと大きい";
+  } else {
+    result.textContent = "📉 もっと小さい";
+  }
+}
+
+function endGame() {
+  guess.disabled = true;
+  guessBtn.disabled = true;
+  retryBtn.style.display = "inline";
+}
+
+function resetGame() {
+  info.textContent = "";
+  count.textContent = "0";
+  history.textContent = "なし";
+  result.textContent = "";
+  score.textContent = "-";
+  guess.value = "";
+  guess.disabled = true;
+  guessBtn.disabled = true;
+  retryBtn.style.display = "none";
+}
+</script>
+
+</body>
+</html>
